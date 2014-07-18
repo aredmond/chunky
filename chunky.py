@@ -11,17 +11,28 @@ def unchunker(chunks, output_file_name):
 		for chunk in chunks:
 			target.write(chunk)
 
-import os
-			
-def file_split(input_file_name, count):
-	input_file_name_size = os.lstat(input_file_name).st_size
-	prefix, ftype = input_file_name.split('.')
-	chunksize = input_file_name_size / count
-	chunksize_remainder = input_file_name_size % count
-	read_list = [chunksize]*count
-	read_list[0] += chunksize_remainder
-	with open(input_file_name, 'r+b') as source:
-		for read_size in read_list:
-			data = source.read(read_size)
-			with open(prefix + '.part' + str(read_list.index(read_size)), 'w+b') as target:
-				target.write(data)
+def file_split(data_file, count):
+	with open(data_file, 'rb') as datafile:
+             data = datafile.read()
+        
+        
+        datasize = len(data)
+	prefix, ftype = data_file.split('.')
+	chunksize = datasize/count
+
+        ## no need for remained, if it does not divide, 
+        ## the last split point will be a fraction of a chunksize from the end
+        ## ex. len(range(0,13,2) = 7   NOT   6
+        splitpoints = range(0,datasize,chunksize)
+        seriel_num = 1
+        last_split = 0
+        for split in splitpoints[1:]:
+            with open((prefix + "_" + "split" + "_" + str(seriel_num)),'wb') as target:
+                target.write(data[last_split:split])
+            last_split = split
+            seriel_num = seriel_num + 1
+        ## Last chunk
+        with open((prefix + "_" + "split" + "_" + str(seriel_num)),'wb') as target:
+            target.write(data[splitpoints[-1]:])
+
+file_split('data.bit', 4)
